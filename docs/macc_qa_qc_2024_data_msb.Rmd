@@ -1,0 +1,298 @@
+---
+title: "macc_qa_qc"
+author: "Bethel Cole-Smith"
+date: "2025-01-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(ggmacc) # devtools::install_github("aj-sykes92/ggmacc")
+```
+
+```{r data}
+# Read in country code mapping
+country_map = read_csv("data/country_map.csv") %>%
+  rename(country_code = r)
+
+# Read in global MACC data
+macc_2024 = read_csv("data/MACC_01142025.csv") %>%
+  mutate(version = 2024) %>%
+  left_join(country_map, by="country")
+
+sectors <- unique(macc_2024$sector)
+sources = unique(macc_2024$source)
+
+macc_2019 = read_xlsx("data/MACC_Gas_Tech_Intl with proj and pivot_2019.xlsx", sheet = "Mitigation - Raw Data") %>%
+  mutate(version = 2019) %>%
+  rename(country_code = country) %>%
+  select(-q_dsoc) %>% 
+  left_join(country_map, by = "country_code") %>%
+  select(names(macc_2024))
+
+macc_comp = rbind(macc_2024,macc_2019)
+```
+
+# MACC by Technology
+
+```{r tech_curves}
+macc_byTech = function(macc_df, 
+                       sectorSelect=NULL, 
+                       sourceSelect=NULL, 
+                       yearSelect=2030, 
+                       priceMax=100,
+                       versionSelect=2024,
+                       legendOFF=TRUE) {
+  
+  if(length(sectorSelect)>1) {rlang::abort(message = "This function can only handle one sector at a time")}
+  if(length(sourceSelect)>1) {rlang::abort(message = "This function can only handle one source at a time")}
+  
+  df_filtered = macc_df %>%
+    filter(year == yearSelect &
+             p <= priceMax &
+             versionSelect %in% version)
+  
+  if(!is.null(sectorSelect)) {
+    df_filtered = df_filtered %>%
+      filter(sector %in% sectorSelect)
+    title = sectorSelect
+  }
+  
+  if(!is.null(sourceSelect)) {
+    df_filtered = df_filtered %>%
+      filter(source %in% sourceSelect)
+    title = sourceSelect
+  }
+  
+  df_summarized = df_filtered %>%
+    group_by(sector, year, p, tech, tech_long) %>% 
+    summarize(q_total = sum(q_total), .groups = "drop")
+  
+  macc_prepped <- df_summarized %>%
+    macc_prep(mac = p, abatement = q_total) 
+  
+fig = macc_prepped %>%
+  ggplot() +
+  geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
+  facet_grid(year~.) +
+  scale_fill_discrete(guide = guide_legend()) +
+  theme(legend.position="bottom") +
+  labs(y = "Price ($/tCO2e",
+       x = "Mitigation (Mt CO2e)",
+       title = title,
+       fill = "Technology")
+
+if(legendOFF) {fig = fig + theme(legend.position='none')}
+
+if(!is.null(sectorSelect)) {
+  ggsave(paste0("output/macc_byTech/sectors/",sectorSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 10, height = 10)
+  print(paste("Figure created for",sectorSelect))}
+if(!is.null(sourceSelect)) {
+  ggsave(paste0("output/macc_byTech/sources/",sourceSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 10, height = 10)
+  print(paste("Figure created for",sourceSelect))}
+
+fig
+}
+```
+
+## Sectors
+
+### 2030
+
+```{r}
+for (sector in sectors) {
+  macc_byTech(
+    macc_2024,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+### 2050
+
+```{r}
+for (sector in sectors) {
+  macc_byTech(
+    macc_2024,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+## Sources
+
+### 2030
+
+```{r}
+for (source in sources) {
+  macc_byTech(
+    macc_2024,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+### 2050
+
+```{r}
+for (sector in sectors) {
+  macc_byTech(
+    macc_2024,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+# MACC - Smooth
+
+```{r smooth_curves}
+macc_smooth = function(macc_df, 
+                       sectorSelect=NULL, 
+                       sourceSelect=NULL, 
+                       yearSelect=2030, 
+                       priceMax=100,
+                       versionSelect=2024,
+                       legendOFF=TRUE) {
+  
+  if(length(sectorSelect)>1) {rlang::abort(message = "This function can only handle one sector at a time")}
+  if(length(sourceSelect)>1) {rlang::abort(message = "This function can only handle one source at a time")}
+  
+  df_filtered = macc_df %>%
+    filter(year == yearSelect &
+             p <= priceMax &
+             versionSelect %in% version)
+  
+  if(!is.null(sectorSelect)) {
+    df_filtered = df_filtered %>%
+      filter(sector %in% sectorSelect)
+    title = sectorSelect
+  }
+  
+  if(!is.null(sourceSelect)) {
+    df_filtered = df_filtered %>%
+      filter(source %in% sourceSelect)
+    title = sourceSelect
+  }
+  
+  df_summarized = df_filtered %>%
+    group_by(sector, year, p, tech, tech_long) %>% 
+    summarize(q_total = sum(q_total), .groups = "drop")
+  
+  macc_prepped <- df_summarized %>%
+    macc_prep(mac = p, abatement = q_total) %>%
+    select(-ymin, -ymax) %>%
+    pivot_longer(cols = c("xmax","xmin"), names_to = "x_type", values_to = "x")
+  
+fig = macc_prepped %>%
+  ggplot() +
+  geom_line(aes(x=x,y=p)) +
+  facet_grid(year~.) +
+  scale_fill_discrete(guide = guide_legend()) +
+  theme(legend.position="bottom") +
+  labs(y = "Price ($/tCO2e)",
+       x = "Mitigation (Mt CO2e)",
+       title = title)
+
+if(!is.null(sectorSelect)) {
+  ggsave(paste0("output/macc_smooth/sectors/",sectorSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 5, height = 5)
+  print(paste("Figure created for",sectorSelect))}
+if(!is.null(sourceSelect)) {
+  ggsave(paste0("output/macc_smooth/sources/",sourceSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 5, height = 5)
+  print(paste("Figure created for",sourceSelect))}
+
+fig
+}
+```
+
+## Sectors
+
+### 2030
+
+```{r}
+for (sector in sectors) {
+  macc_smooth(
+    macc_2024,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+### 2050
+
+```{r}
+for (sector in sectors) {
+  macc_smooth(
+    macc_2024,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+## Sources
+
+### 2030
+
+```{r}
+for (source in sources) {
+  macc_smooth(
+    macc_2024,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+### 2050
+
+```{r}
+for (sector in sectors) {
+  macc_smooth(
+    macc_2024,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
