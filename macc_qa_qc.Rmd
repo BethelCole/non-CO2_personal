@@ -1,0 +1,248 @@
+---
+title: "macc_qa_qc"
+author: "Bethel Cole-Smith"
+date: "2025-01-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(ggmacc) # devtools::install_github("aj-sykes92/ggmacc")
+```
+
+```{r data}
+# Read in MACC domestic data
+MACC_Gas_Tech_Dom_raw <- read_csv("MACC_Gas_Tech_Dom.csv") %>%
+  mutate(version = "real")
+macc_test = MACC_Gas_Tech_Dom_raw %>% 
+  mutate(q_total = q_total * 1.1,
+         p = p * 1.1,
+         version = "test") %>%
+  select(names(MACC_Gas_Tech_Dom_raw))
+
+macc_test_combo = rbind(MACC_Gas_Tech_Dom_raw,macc_test)
+
+paste("Emissions Sources:", paste(unique(MACC_Gas_Tech_Dom_raw$source), collapse = ","))
+# "CROP" "LIVE" "RICE" "COL"  "GAS"  "AERO" "AL"   "EPS"  "FIRE" "FOAM" "MG" "NAA"  "PV"   "RAC"  "SEMI" "SOLV" "LAN"  "WWR"
+```
+
+#1 - group sources into larger groups ex metals is made up of aluminum and magnesium - see slide 2 for all the IPPU groupings https://usepa.sharepoint.com/:p:/r/sites/oar_Work/globalnonco2report/_layouts/15/Doc.aspx?sourcedoc=%7B0F5C68DF-C860-406D-957B-82D71A64342E%7D&file=Sector-specific%20Methods%20Brief%20%232_IPPU_Waste_for%20CCD_010725.v1.pptx&wdLOR=c836DB07D-5567-4A92-BBEC-84771FAFF3FE&fromShare=true&action=edit&mobileredirect=true 
+
+-group sources within IPPU into ODS Subs, Metals, etc
+-For the 2024 data, may need to have a comparative group (ie one that only includes the subsources present in the 2019 data) and a full group (one that incorporates all the different subsources in 2024)
+
+#2 - # TO DO 2: create different plots by state (once we get the country level data we can switch the variable to state)
+
+#3 - # TO DO 3: create overall mitigation by each sector (one for Ag, one for energy, one for IPPU, one for waste)
+
+```{r}
+# df = macc_test_combo
+# sectorSelect = c("WASTE")
+# sourceSelect = c("LAN")
+# sourceFacet = FALSE
+# yearSelect = c(2030)
+# priceMax = 200
+# region = c("North Carolina")
+# regionFacet = FALSE
+# versionSelect = c("test","real")
+
+macc_byTech = function(df, 
+                       sectorSelect=NULL, 
+                       sourceSelect=NULL, 
+                       yearSelect=2030, 
+                       priceMax=100) {
+  
+  # AGGREGATED ACROSS REGIONS
+  # by sector - aggregated across source
+  # by sector - faceted over source
+  # by source
+  if(length(sectorSelect)>1) {rlang::abort(message = "This function can only handle one sector at a time")}
+  if(length(sourceSelect)>1) {rlang::abort(message = "This function can only handle one source at a time")}
+  
+  df_filtered = df %>%
+    filter(year == yearSelect &
+             p <= priceMax )
+  
+  if(!is.null(sectorSelect)) {
+    df_filtered = df_filtered %>%
+      filter(sector %in% sectorSelect)
+    title = sectorSelect
+  }
+  
+  if(!is.null(sourceSelect)) {
+    df_filtered = df_filtered %>%
+      filter(source %in% sourceSelect)
+    title = sourceSelect
+  }
+  
+  df_summarized = df_filtered %>%
+    group_by(sector, year, p, tech, tech_long) %>% 
+    summarize(q_total = sum(q_total), .groups = "drop")
+  
+  macc_prepped <- df_summarized %>%
+    macc_prep(mac = p, abatement = q_total) 
+  
+macc_prepped %>%
+  ggplot() +
+  geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
+  facet_grid(year~.) +
+  scale_fill_discrete(guide = guide_legend()) +
+  theme(legend.position="bottom") +
+  labs(y = "Price ($/tCO2e",
+       x = "Mitigation (Mt CO2e)",
+       title = title,
+       fill = "Technology")
+}
+
+macc_byTech(macc_test, sectorSelect = "WASTE")
+macc_byTech(macc_test, sourceSelect = "COL")
+```
+
+```{r}
+macc_smooth = function(df, 
+                       sectorSelect=NULL, 
+                       sourceSelect=NULL, 
+                       yearSelect=2030, 
+                       priceMax=100) {
+  
+  # AGGREGATED ACROSS REGIONS
+  # by sector - aggregated across source
+  # by sector - faceted over source
+  # by source
+  if(length(sectorSelect)>1) {rlang::abort(message = "This function can only handle one sector at a time")}
+  if(length(sourceSelect)>1) {rlang::abort(message = "This function can only handle one source at a time")}
+  
+  df_filtered = df %>%
+    filter(year == yearSelect &
+             p <= priceMax )
+  
+  if(!is.null(sectorSelect)) {
+    df_filtered = df_filtered %>%
+      filter(sector %in% sectorSelect)
+    title = sectorSelect
+  }
+  
+  if(!is.null(sourceSelect)) {
+    df_filtered = df_filtered %>%
+      filter(source %in% sourceSelect)
+    title = sourceSelect
+  }
+  
+  df_summarized = df_filtered %>%
+    group_by(sector, year, p, tech, tech_long) %>% 
+    summarize(q_total = sum(q_total), .groups = "drop")
+  
+  macc_prepped <- df_summarized %>%
+    macc_prep(mac = p, abatement = q_total) %>%
+    select(-ymin, -ymax) %>%
+    pivot_longer(cols = c("xmax","xmin"), names_to = "x_type", values_to = "x")
+  
+macc_prepped %>%
+  ggplot() +
+  geom_line(aes(x=x,y=p)) +
+  facet_grid(year~.) +
+  scale_fill_discrete(guide = guide_legend()) +
+  theme(legend.position="bottom") +
+  labs(y = "Price ($/tCO2e",
+       x = "Mitigation (Mt CO2e)",
+       title = title)
+}
+
+macc_smooth(macc_test, sectorSelect = "WASTE")
+macc_smooth(macc_test, sourceSelect = "COL")
+```
+
+```{r}
+MACC_sector <- MACC_Gas_Tech_Dom_raw %>%
+  dplyr::filter(sector == "WASTE" & year == 2030) %>%
+  group_by(source, year, p, tech_long) %>%
+  summarize(price_specific_reduction = sum(q_total))
+
+MACC_sector_cum <- MACC_sector %>%
+  ungroup() %>%
+  group_by(source, year) %>% # no longer grouping by tech_long or p, so that the cumulative mitigation can be cumulative over source and year, regardless of the technology being used, and regardless of the price. Meaning that it will sum up all the mitigation for a specific source, for a specific year (instead of only summing the mitigation for a source and year within a specific price and within a specific technology)
+  arrange(p,.by_group = TRUE) %>% # must specifically mention .by_group = TRUE otherwise it will ignore the group_by
+  mutate(cumulative_reduction = cumsum(price_specific_reduction))
+
+check_MACC_sector_cum_totals <- MACC_sector %>%
+  group_by(source, year) %>%
+  summarize(total_mitigation = sum(price_specific_reduction))
+
+check_MACC_sector_cum_totals_alt <- MACC_Gas_Tech_Dom_raw %>%
+  dplyr::filter(sector == "WASTE" & year == 2030) %>%
+  group_by(source, year) %>%
+  summarize(total_mitigation = sum(q_total))
+  
+macc_prep_sector_df <- MACC_sector %>%
+  macc_prep(mac = p, abatement = total_mitigation) 
+
+macc_prep_sector_df_alt <- MACC_sector_cum %>%
+  macc_prep(mac = p, abatement = total_mitigation) 
+
+
+macc_prep_sector_df_alt %>%
+  ggplot() +
+  geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
+  facet_grid(year~source) +
+  #ylim(min(macc_prep_sector_df_alt$p), max(macc_prep_sector_df_alt$p)) + 
+  scale_fill_discrete(guide = guide_legend()) +
+  theme(legend.position="bottom")
+
+plot_macc <- function(dataframe, source){
+  dataframe %>%
+    dplyr::filter(source == source) %>%
+    ggplot() +
+    geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
+    facet_wrap(~year) +
+    ylim(min(dataframe$p), max(dataframe$p)) + 
+    scale_fill_discrete(guide = guide_legend()) +
+    theme(legend.position="none")
+}
+
+plot_macc(macc_prep_sector_df, CROP)
+
+
+plot_macc_alt <- function(dataframe, source){
+  dataframe %>%
+    dplyr::filter(source == source) %>%
+    ggplot() +
+    geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
+    facet_wrap(~year) +
+    ylim(min(dataframe$p), max(dataframe$p)) + 
+    scale_fill_discrete(guide = guide_legend()) +
+    theme(legend.position="none")
+}
+
+plot_macc_alt(macc_prep_sector_df_alt, WWR)
+plot_macc_alt(macc_prep_sector_df_alt, LAN)
+
+```
+
+#4 - # TO DO 4: create table showing total mitigation at or below zero and total mitigation (overall) ie a two line table for each source group (eg ODS Subs, Electronics, wastewater, oil and gas)
+
+```{r}
+  MACC_mitigation_alt <- MACC_Gas_Tech_Dom_raw %>%
+  #dplyr::filter(sector == "WASTE") %>%
+    #mutate(price_group = case_when(p <= 0 ~ "at or below zero",
+    #                               p >0 ~ "above zero")) %>%
+  group_by(source, year) %>%
+  arrange(p,.by_group = TRUE) %>% # must specifically mention .by_group = TRUE otherwise it will ignore the group_by
+  mutate(cumulative_reduction = cumsum(q_total),
+         price_group = case_when(p <= 0 ~ "at or below zero",
+                                   p >0 ~ "above zero"),
+         price_group_ordered = factor(price_group, level = c("at or below zero", "above zero"))) %>%
+  ungroup() %>%
+    group_by(source, year, price_group_ordered) %>% 
+    arrange(p,.by_group = TRUE) %>% 
+  summarize(total_mitigation_by_price_group = sum(q_total)) %>%
+    #ungroup() %>%
+    #group_by(source, year) %>%
+  #arrange(p,.by_group = TRUE) %>% # must specifically mention .by_group = TRUE otherwise it will ignore the group_by
+  mutate(cumulative_reduction = cumsum(total_mitigation_by_price_group))
+  #dplyr::filter(p == 0 | p == max(p))
+
+```

@@ -1,0 +1,104 @@
+---
+title: "GER review"
+author: "Bethel Cole-Smith"
+date: "2025-01-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+
+```
+
+# Baseline projections
+
+## Data source
+These summary statistics utilise as source data the ger_for_webtool.csv file received by EPA on January ... 2025 (Tyler to Jared et al, Jared to Bethel et al).
+
+
+
+```{r cars, echo=FALSE}
+
+ger_for_webtool_raw <- read_csv("ger_for_webtool.csv")
+
+# names(ger_for_webtool_raw)
+# unique(ger_for_webtool_raw$gas)
+# unique(ger_for_webtool_raw$unit)
+# unique(ger_for_webtool_raw$sector)
+# unique(ger_for_webtool_raw$source)
+
+ger_for_webtool_all_gases <- ger_for_webtool_raw %>%
+  dplyr::select(-"...1") %>%
+  group_by(year, sector, source, country) %>%
+  summarize(value_all_gases = sum(value, na.rm = TRUE))
+
+
+ger_for_webtool_sources <- ger_for_webtool_all_gases %>%
+  group_by(year, sector, source) %>%
+  summarize(value_all_gases_countries = sum(value_all_gases, na.rm = TRUE))
+
+ggplot(data = ger_for_webtool_sources, aes(x=year, y = value_all_gases_countries)) +
+  geom_col() +
+  facet_wrap(~source) +
+    xlab("Year") +
+    ylab("MtCO2e")
+
+```
+
+## Select country plots
+
+```{r pressure, echo=FALSE}
+
+
+create_data <- function(country, sector, source){
+  data_for_plot <- ger_for_webtool_all_gases %>%
+    dplyr::filter(country == country & sector == sector & source == source)
+}
+
+create_data(Afghanistan, Agriculture, Livestock)
+
+
+country_plot <- function(country, sector, source){
+  data_for_plot <- ger_for_webtool_all_gases %>%
+    dplyr::filter(country == country & sector == sector & source == source)
+    
+  ggplot(data = data_for_plot, aes(x=year, y = value_all_gases)) +
+    geom_col() +
+    xlab("Year") +
+    ylab("MtCO2e")
+}
+
+# we may want to pull in the 2019 report estimates and plot them beside.
+# we may also want to calculate and plot the difference (or percent difference)
+
+# rice only methane for comparison (from meeting 1/13/2025)
+# is soil carbon counted?(Jared) No organic soil carbon in the GER (Tyler)
+# keep everything so you don't have to rerun anything (Jared). We will just note that the GER baseline includes these things, so when you are presenting the removals, we will have to include some unknown quantity of soil carbon change, or we could take the soil carbon from DAYCENT and add it to the country reported soil carbon and methane...makes sense? Keep what we had, make one change, put DAYCENT as percent. 
+
+#country_plot(Afghanistan, Agriculture, Livestock)
+
+#sapply(country_plot)
+
+country_plot(Afghanistan, Agriculture, Livestock)
+country_plot("United States", Agriculture, "Soil/Cropland")
+country_plot("United States", Agriculture, "Rice Cultivation")
+country_plot("United States", Energy, "Oil and Natural Gas Systems")
+country_plot("United States", Energy, "Coal Mining")
+country_plot("United States", "Industrial Processes", "Electric Power Systems")
+country_plot("United States", "Industrial Processes", "Nitric and Adipic Acid Production")
+country_plot("United States", Waste, Landfills)
+country_plot("United States", Waste, Wastewater)
+
+
+ger_for_webtool_all_gases %>%
+    dplyr::filter(country == "United States", sector == "Energy", source == "Coal Mining") %>%
+    ggplot(aes(x=year, y = value_all_gases)) +
+    geom_col()
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
