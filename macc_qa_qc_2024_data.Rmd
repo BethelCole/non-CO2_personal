@@ -16,7 +16,7 @@ library(ggmacc) # devtools::install_github("aj-sykes92/ggmacc")
 
 ```{r data}
 # Read in MACC domestic data
-df_30_50_summary_MACC_01142025_raw <- read_csv("30_50_summary_MACC_01142025.csv") #%>%
+MACC_01142025 <- read_csv("MACC_01142025.csv") #%>%
 #   mutate(version = "real")
 # macc_test = MACC_Gas_Tech_Dom_raw %>% 
 #   mutate(q_total = q_total * 1.1,
@@ -26,16 +26,16 @@ df_30_50_summary_MACC_01142025_raw <- read_csv("30_50_summary_MACC_01142025.csv"
 # 
 # macc_test_combo = rbind(MACC_Gas_Tech_Dom_raw,macc_test)
 
-patchwork
+#patchwork
 
 df_30_50_summary_MACC_01142025_raw <- read_csv("30_50_summary_MACC_01142025.csv") #%>%
 
 sector_summary_MACC_01142025 <- read_csv("sector_summary_MACC_01142025.csv")
 
-df <- 
+df <- MACC_01142025
 
-paste("Emissions Sources:", paste(unique(df_30_50_summary_MACC_01142025_raw$source), collapse = ","))
-# "CROP" "LIVE" "RICE" "COL"  "GAS"  "AERO" "AL"   "EPS"  "FIRE" "FOAM" "MG" "NAA"  "PV"   "RAC"  "SEMI" "SOLV" "LAN"  "WWR"
+paste("Emissions Sources:", paste(unique(df$source), collapse = ","))
+# "Emissions Sources: CROP,LIVE,RICE,COL,GAS,WWR,LAN,AERO,AL,EPS,FIRE,FOAM,FPD,HCFC,MG,NAA,PV,RAC,SEMI,SOLV"
 ```
 
 #1 - group sources into larger groups ex metals is made up of aluminum and magnesium - see slide 2 for all the IPPU groupings https://usepa.sharepoint.com/:p:/r/sites/oar_Work/globalnonco2report/_layouts/15/Doc.aspx?sourcedoc=%7B0F5C68DF-C860-406D-957B-82D71A64342E%7D&file=Sector-specific%20Methods%20Brief%20%232_IPPU_Waste_for%20CCD_010725.v1.pptx&wdLOR=c836DB07D-5567-4A92-BBEC-84771FAFF3FE&fromShare=true&action=edit&mobileredirect=true 
@@ -47,7 +47,7 @@ paste("Emissions Sources:", paste(unique(df_30_50_summary_MACC_01142025_raw$sour
 
 #3 - # TO DO 3: create overall mitigation by each sector (one for Ag, one for energy, one for IPPU, one for waste)
 
-```{r}
+```{r tech_curves}
 # df = macc_test_combo
 # sectorSelect = c("WASTE")
 # sourceSelect = c("LAN")
@@ -61,7 +61,7 @@ paste("Emissions Sources:", paste(unique(df_30_50_summary_MACC_01142025_raw$sour
 macc_byTech = function(df, 
                        sectorSelect=NULL, 
                        sourceSelect=NULL, 
-                       yearSelect=2050, 
+                       yearSelect=2030, 
                        priceMax=100) {
   
   # AGGREGATED ACROSS REGIONS
@@ -106,7 +106,7 @@ macc_prepped %>%
        fill = "Technology")
 }
 
-unique(df_30_50_summary_MACC_01142025_raw$sector)
+unique(df$sector)
 # "AGRICULTURE" "ENERGY"      "WASTE"   
 sectors <- unique(df_30_50_summary_MACC_01142025_raw$sector)
 
@@ -115,43 +115,44 @@ for (i in 1:length(sectors)) {
   
 }
 
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sectorSelect = "AGRICULTURE")
+macc_byTech(df, sectorSelect = "AGRICULTURE")
 ggsave("output/AGRICULTURE_2030_v2024.png")
+macc_byTech(df, sectorSelect = "AGRICULTURE", yearSelect = 2050)
 ggsave("output/AGRICULTURE_2050_v2024.png")
 
 
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sectorSelect = "ENERGY")
+macc_byTech(df, sectorSelect = "ENERGY")
 ggsave("output/ENERGY_2030_v2024.png")
 ggsave("output/ENERGY_2050_v2024.png")
 
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sectorSelect = "WASTE")
+macc_byTech(df, sectorSelect = "WASTE")
 ggsave("output/WASTE_2030_v2024.png")
-ggsave("output/WASTE_2050_v2024.png")
+ggsave("output/WASTE_2050_v2024_n.png")
 
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sourceSelect = "CROP")
+macc_byTech(df, sourceSelect = "CROP")
 ggsave("output/CROP_2030_v2024.png")
 ggsave("output/CROP_2050_v2024.png")
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sourceSelect = "LIVE")
+macc_byTech(df, sourceSelect = "LIVE")
 ggsave("output/LIVE_2030_v2024.png")
 ggsave("output/LIVE_2050_v2024.png")
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sourceSelect = "RICE")
+macc_byTech(df, sourceSelect = "RICE")
 ggsave("output/RICE_2030_v2024.png")
 ggsave("output/RICE_2050_v2024.png")
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sourceSelect = "COL")
+macc_byTech(df, sourceSelect = "COL")
 ggsave("output/COL_2030_v2024.png")
 ggsave("output/COL_2050_v2024.png")
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sourceSelect = "GAS")
+macc_byTech(df, sourceSelect = "GAS")
 ggsave("output/GAS_2030_v2024.png")
 ggsave("output/GAS_2050_v2024.png")
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sourceSelect = "WWR")
+macc_byTech(df, sourceSelect = "WWR")
 ggsave("output/WWR_2030_v2024.png")
 ggsave("output/WWR_2050_v2024.png")
-macc_byTech(df_30_50_summary_MACC_01142025_raw, sourceSelect = "LAN")
+macc_byTech(df, sourceSelect = "LAN")
 ggsave("output/LAN_2030_v2024.png")
 ggsave("output/LAN_2050_v2024.png")
 ```
 
-```{r}
+```{r smooth_curves}
 macc_smooth = function(df, 
                        sectorSelect=NULL, 
                        sourceSelect=NULL, 
@@ -201,11 +202,11 @@ macc_prepped %>%
        title = title)
 }
 
-macc_smooth(macc_test, sectorSelect = "WASTE")
-macc_smooth(macc_test, sourceSelect = "COL")
+macc_smooth(df, sectorSelect = "WASTE")
+macc_smooth(df, sourceSelect = "COL")
 ```
 
-```{r}
+```{r, eval=FALSE}
 MACC_sector <- MACC_Gas_Tech_Dom_raw %>%
   dplyr::filter(sector == "WASTE" & year == 2030) %>%
   group_by(source, year, p, tech_long) %>%
@@ -273,8 +274,8 @@ plot_macc_alt(macc_prep_sector_df_alt, LAN)
 
 #4 - # TO DO 4: create table showing total mitigation at or below zero and total mitigation (overall) ie a two line table for each source group (eg ODS Subs, Electronics, wastewater, oil and gas)
 
-```{r}
-  MACC_mitigation_price_table <- df_30_50_summary_MACC_01142025_raw %>%
+```{r sector_tables}
+  MACC_mitigation_price_table_new <- df %>%
   #dplyr::filter(sector == "WASTE") %>%
     #mutate(price_group = case_when(p <= 0 ~ "at or below zero",
     #                               p >0 ~ "above zero")) %>%
@@ -294,17 +295,17 @@ plot_macc_alt(macc_prep_sector_df_alt, LAN)
   mutate(cumulative_reduction = cumsum(total_mitigation_by_price_group))
   #dplyr::filter(p == 0 | p == max(p))
 
-write.csv(MACC_mitigation_price_table , "output/MACC_mitigation_price_table.csv")
+write.csv(MACC_mitigation_price_table_new , "output/MACC_mitigation_price_table_new.csv")
 
 ```
 
 
 #  mitigation_table_sectors
 
-```{r}
+```{r source_tables}
 
 
-  MACC_mitigation_price_table_sectors <- df_30_50_summary_MACC_01142025_raw %>%
+  MACC_mitigation_price_table_sectors_new <- df %>%
   #dplyr::filter(sector == "WASTE") %>%
     #mutate(price_group = case_when(p <= 0 ~ "at or below zero",
     #                               p >0 ~ "above zero")) %>%
@@ -324,6 +325,6 @@ write.csv(MACC_mitigation_price_table , "output/MACC_mitigation_price_table.csv"
   mutate(cumulative_reduction = cumsum(total_mitigation_by_price_group))
   #dplyr::filter(p == 0 | p == max(p))
 
-write.csv(MACC_mitigation_price_table_sectors , "output/MACC_mitigation_price_table_sectors.csv")
+write.csv(MACC_mitigation_price_table_sectors_new , "output/MACC_mitigation_price_table_sectors_new.csv")
 
 ```
