@@ -1,6 +1,5 @@
 ---
 title: "macc_qa_qc"
-author: "Bethel Cole-Smith"
 output:
   html_document:
     toc: yes
@@ -46,8 +45,6 @@ macc_2019 = read_xlsx("data/MACC_Gas_Tech_Intl with proj and pivot_2019.xlsx", s
 macc_comp = rbind(macc_2024,macc_2019)
 ```
 
-# MACC by Technology
-
 ```{r tech_curves}
 macc_byTech = function(macc_df, 
                        sectorSelect=NULL, 
@@ -77,6 +74,12 @@ macc_byTech = function(macc_df,
     title = sourceSelect
   }
   
+   if(nrow(df_filtered)<1) {
+    if(!is.null(sectorSelect)) {print(paste("No data available for",sectorSelect,"with the given parameters."))}
+    if(!is.null(sourceSelect)) {print(paste("No data available for",sourceSelect,"with the given parameters."))}
+    return()
+  }
+  
   df_summarized = df_filtered %>%
     group_by(sector, year, p, tech, tech_long) %>% 
     summarize(q_total = sum(q_total), .groups = "drop")
@@ -90,7 +93,7 @@ fig = macc_prepped %>%
   facet_grid(year~.) +
   scale_fill_discrete(guide = guide_legend()) +
   theme(legend.position="bottom") +
-  labs(y = "Price ($/tCO2e",
+  labs(y = "Price ($/tCO2e)",
        x = "Mitigation (Mt CO2e)",
        title = title,
        fill = "Technology")
@@ -110,76 +113,6 @@ print(fig)
 return(fig)
 }
 ```
-
-## Sectors
-
-### 2030
-
-```{r}
-for (sector in sectors) {
-  macc_byTech(
-    macc_2024,
-    sectorSelect = sector,
-    sourceSelect = NULL,
-    yearSelect = 2030,
-    priceMax = 100,
-    versionSelect = 2024,
-    legendOFF = TRUE
-  )
-}
-```
-
-### 2050
-
-```{r}
-for (sector in sectors) {
-  macc_byTech(
-    macc_2024,
-    sectorSelect = sector,
-    sourceSelect = NULL,
-    yearSelect = 2050,
-    priceMax = 100,
-    versionSelect = 2024,
-    legendOFF = TRUE
-  )
-}
-```
-
-## Sources
-
-### 2030
-
-```{r}
-for (source in sources) {
-  macc_byTech(
-    macc_2024,
-    sectorSelect = NULL,
-    sourceSelect = source,
-    yearSelect = 2030,
-    priceMax = 100,
-    versionSelect = 2024,
-    legendOFF = TRUE
-  )
-}
-```
-
-### 2050
-
-```{r}
-for (source in sources) {
-  macc_byTech(
-    macc_2024,
-    sectorSelect = NULL,
-    sourceSelect = source,
-    yearSelect = 2050,
-    priceMax = 100,
-    versionSelect = 2024,
-    legendOFF = TRUE
-  )
-}
-```
-
-# MACC - Smooth
 
 ```{r smooth_curves}
 macc_smooth = function(macc_df, 
@@ -210,6 +143,12 @@ macc_smooth = function(macc_df,
     title = sourceSelect
   }
   
+   if(nrow(df_filtered)<1) {
+    if(!is.null(sectorSelect)) {print(paste("No data available for",sectorSelect,"with the given parameters."))}
+    if(!is.null(sourceSelect)) {print(paste("No data available for",sourceSelect,"with the given parameters."))}
+    return()
+  }
+  
   df_summarized = df_filtered %>%
     group_by(sector, year, p, tech, tech_long) %>% 
     summarize(q_total = sum(q_total), .groups = "drop")
@@ -219,7 +158,7 @@ macc_smooth = function(macc_df,
     select(-ymin, -ymax) %>%
     pivot_longer(cols = c("xmax","xmin"), names_to = "x_type", values_to = "x")
   
-fig = macc_prepped %>%
+  fig = macc_prepped %>%
   ggplot() +
   geom_line(aes(x=x,y=p)) +
   facet_grid(year~.) +
@@ -243,10 +182,77 @@ return(fig)
 }
 ```
 
+# MACC by Technology
+
 ## Sectors
 
 ### 2030
+```{r}
+for (sector in sectors) {
+  macc_byTech(
+    macc_2024,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
 
+### 2050
+```{r}
+for (sector in sectors) {
+  macc_byTech(
+    macc_2024,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+## Sources
+
+### 2030
+```{r}
+for (source in sources) {
+  macc_byTech(
+    macc_2024,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+### 2050
+```{r}
+for (source in sources) {
+  macc_byTech(
+    macc_2024,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+```
+
+# MACC - Smooth
+
+## Sectors
+
+### 2030
 ```{r}
 for (sector in sectors) {
   macc_smooth(
@@ -262,7 +268,6 @@ for (sector in sectors) {
 ```
 
 ### 2050
-
 ```{r}
 for (sector in sectors) {
   macc_smooth(
@@ -280,7 +285,6 @@ for (sector in sectors) {
 ## Sources
 
 ### 2030
-
 ```{r}
 for (source in sources) {
   macc_smooth(
@@ -296,7 +300,6 @@ for (source in sources) {
 ```
 
 ### 2050
-
 ```{r}
 for (source in sources) {
   macc_smooth(
