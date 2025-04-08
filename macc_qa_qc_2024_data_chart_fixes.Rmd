@@ -12,7 +12,8 @@ library(tidyverse)
 library(readxl)
 library(ggplot2)
 library(ggmacc) # devtools::install_github("aj-sykes92/ggmacc")
-
+library(patchwork)
+library(gridExtra) # https://stackoverflow.com/questions/1249548/side-by-side-plots-with-ggplot2
 
 # for Agriculture sector MACC, set ymin = 0. Price values for mitigation below zero are so low that the options above zero can't be seen on the plot
 
@@ -20,7 +21,7 @@ library(ggmacc) # devtools::install_github("aj-sykes92/ggmacc")
 
 ```{r data}
 # Read in MACC domestic data
-MACC_01142025 <- read_csv("MACC_01142025.csv") #%>%
+MACC_01142025 <- read_csv("MACC_01142025.csv")#%>%
 #   mutate(version = "real")
 # macc_test = MACC_Gas_Tech_Dom_raw %>% 
 #   mutate(q_total = q_total * 1.1,
@@ -37,12 +38,14 @@ df_30_50_summary_MACC_01142025_raw <- read_csv("30_50_summary_MACC_01142025.csv"
 
 sector_summary_MACC_01142025 <- read_csv("sector_summary_MACC_01142025.csv")
 
-MACC_df <- MACC_01142025
+
+MACC_01242025 <- read_csv("data/MACC_01242025.csv")
+MACC_df <- MACC_01242025
 
 # add in residual line
 # add a bar for 2019 data
 
-paste("Emissions Sources:", paste(unique(df$source), collapse = ","))
+paste("Emissions Sources:", paste(unique(MACC_df$source), collapse = ","))
 # "Emissions Sources: CROP,LIVE,RICE,COL,GAS,WWR,LAN,AERO,AL,EPS,FIRE,FOAM,FPD,HCFC,MG,NAA,PV,RAC,SEMI,SOLV"
 ```
 
@@ -190,11 +193,11 @@ macc_byTech_ag_upper = function(df,
     title = sectorSelect
   }
   
-  if(!is.null(sourceSelect)) {
-    df_filtered = df_filtered %>%
-      filter(source %in% sourceSelect)
-    title = sourceSelect
-  }
+  # if(!is.null(sourceSelect)) {
+  #   df_filtered = df_filtered %>%
+  #     filter(source %in% sourceSelect)
+  #   title = sourceSelect
+  # }
   
   df_summarized = df_filtered %>%
     group_by(sector, year, p, tech, tech_long) %>% 
@@ -203,7 +206,7 @@ macc_byTech_ag_upper = function(df,
   macc_prepped <- df_summarized %>%
     macc_prep(mac = p, abatement = q_total) 
   
-   #if(is.null(sourceSelect) & sectorSelect == "AGRICULTURE") {
+   if(is.null(sourceSelect) & sectorSelect == "AGRICULTURE") {
     macc_prepped_upper = macc_prepped %>%
       mutate(ymin = 0)
     title = "Mitigation Above $0"
@@ -211,7 +214,7 @@ macc_byTech_ag_upper = function(df,
 #    macc_prepped_lower = macc_prepped %>%
 #      mutate(ymax = 0)
 #    title = "Mitigation At or Below $0"
-  #}
+  }
   
 macc_prepped_upper %>%
   ggplot() +
@@ -238,8 +241,13 @@ macc_prepped_upper %>%
 }
 
 
-macc_byTech_ag_upper(MACC_df_ag, yearSelect = 2030)
+macc_byTech_ag_upper(MACC_df_ag, sectorSelect = "AGRICULTURE",  yearSelect = 2030)
+ggsave("output/AGRICULTURE_2030_v2024_upper.png") # macc_byTech/sectors
 
+```
+
+
+```{r ag_lower}
 macc_byTech_ag_lower = function(df, 
                        sectorSelect=NULL, 
                        sourceSelect=NULL, 
@@ -282,8 +290,9 @@ macc_byTech_ag_lower = function(df,
     # title = "Mitigation Above $0"
       
    macc_prepped_lower = macc_prepped %>%
-     mutate(ymax = 0)
-   title = "Mitigation At or Below $0"
+     dplyr::filter(ymax == 0)
+     #mutate(ymax = 0)
+   title =  c(sectorSelect, ": Mitigation At or Below $0")
   #}
    
 # macc_prepped_upper %>%
@@ -302,7 +311,7 @@ macc_prepped %>%
   geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
   facet_grid(year~.) +
   xlim(0, 500) +
-  ylim(-2000, 0) +
+  ylim(min(macc_prepped$ymin), 0) +
   scale_fill_discrete(guide = guide_legend()) +
   theme(legend.position="none") +
   labs(y = "Price ($/tCO2e)",
@@ -312,20 +321,142 @@ macc_prepped %>%
 
 }
 
-macc_byTech_ag_lower(MACC_df_ag, yearSelect = 2030)
+macc_byTech_ag_lower(MACC_df_ag, sectorSelect = "AGRICULTURE", yearSelect = 2030)
+ggsave("output/AGRICULTURE_2030_v2024_lower.png") # macc_byTech/sectors
+```
+
+
+```{r sources_additional}
+
+MACC_df_ag <- MACC_df
+sourceSelect = "CROP"
+
+macc_byTech_source_upper = function(df, 
+                       #sectorSelect=NULL, 
+                       sourceSelect=NULL, 
+                       yearSelect=2030, 
+                       priceMax=100) {
+  
+
+#  if(length(sectorSelect)>1) {rlang::abort(message = "This function can only handle one sector at a time")}
+  if(length(sourceSelect)>1) {rlang::abort(message = "This function can only handle one source at a time")}
+  
+  df_filtered = df %>%
+    filter(year == yearSelect &
+             p <= priceMax )
+
+  
+  if(!is.null(sourceSelect)) {
+    df_filtered = df_filtered %>%
+      filter(source %in% sourceSelect)
+    title = sourceSelect
+  }
+  
+  df_summarized = df_filtered %>%
+    group_by(year, p, tech, tech_long) %>% 
+    summarize(q_total = sum(q_total), .groups = "drop")
+  
+  macc_prepped <- df_summarized %>%
+    macc_prep(mac = p, abatement = q_total) 
+  
+   #if(is.null(sourceSelect) & sectorSelect == "AGRICULTURE") {
+    macc_prepped_upper = macc_prepped %>%
+      mutate(ymin = 0)
+    title = "Mitigation Above $0"
+      
+  
+fig1 <- macc_prepped_upper %>%
+  ggplot() +
+  geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
+  facet_grid(year~.) +
+  scale_fill_discrete(guide = guide_legend()) +
+  theme(legend.position="none") +
+  labs(y = "Price ($/tCO2e)",
+       x = "Mitigation (Mt CO2e)",
+       title = title,
+       fill = "Technology")
+
+return(fig1)
+
+}
+
+
+macc_byTech_source_upper(MACC_df, sourceSelect = "CROP", yearSelect = 2030)
+
+
+macc_byTech_source_lower = function(df, 
+                       sectorSelect=NULL, 
+                       sourceSelect=NULL, 
+                       yearSelect=2030, 
+                       priceMax=0) {
+  
+
+  if(length(sectorSelect)>1) {rlang::abort(message = "This function can only handle one sector at a time")}
+  if(length(sourceSelect)>1) {rlang::abort(message = "This function can only handle one source at a time")}
+  
+  df_filtered = df %>%
+    filter(year == yearSelect &
+             p <= priceMax )
+  
+  if(!is.null(sectorSelect)) {
+    df_filtered = df_filtered %>%
+      filter(sector %in% sectorSelect)
+    title = sectorSelect
+  }
+  
+  if(!is.null(sourceSelect)) {
+    df_filtered = df_filtered %>%
+      filter(source %in% sourceSelect)
+    title = sourceSelect
+  }
+  
+  df_summarized = df_filtered %>%
+    group_by(sector, year, p, tech, tech_long) %>% 
+    summarize(q_total = sum(q_total), .groups = "drop")
+  
+  macc_prepped <- df_summarized %>%
+    macc_prep(mac = p, abatement = q_total) 
+      
+  #  macc_prepped_lower = macc_prepped %>%
+  #    dplyr::filter(ymax == 0) %>%
+  #    dplyr::filter(ymin == -100)
+  #    #mutate(ymax = 0)
+  #  title =  c(sectorSelect, ": Mitigation At or Below $0")
+  # #}
+   
+
+fig2 <- macc_prepped %>% # _lower
+  ggplot() +
+  geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
+  #facet_grid(year~.) +
+  #xlim(0, 500) +
+  #ylim(min(macc_prepped$ymin), 0) +
+  scale_fill_discrete(guide = guide_legend()) +
+  theme(legend.position="none") +
+  labs(y = "Price ($/tCO2e)",
+       x = "Mitigation (Mt CO2e)",
+       title = title,
+       fill = "Technology")
+
+return(fig2)
+
+}
+
+macc_byTech_source_lower(MACC_df, sourceSelect = "LIVE", yearSelect = 2030)
 
 ```
 
 
 ```{r}
 sectorSelect = "AGRICULTURE"
+sourceSelect = "CROP"
 yearSelect = c(2050)
  priceMax = 100
 # region = c("North Carolina")
 # regionFacet = FALSE
 # versionSelect = c("test","real")
 
-df_filtered = MACC_df_ag %>%
+df_filtered = MACC_df %>%
     filter(year == yearSelect &
              p <= priceMax )
   
@@ -335,14 +466,14 @@ df_filtered = MACC_df_ag %>%
     title = sectorSelect
  # }
   
-  # if(!is.null(sourceSelect)) {
-  #   df_filtered = df_filtered %>%
-  #     filter(source %in% sourceSelect)
-  #   title = sourceSelect
-  # }
+  if(!is.null(sourceSelect)) {
+    df_filtered = df_filtered %>%
+      filter(source %in% sourceSelect)
+    title = sourceSelect
+  }
   
   df_summarized = df_filtered %>%
-    group_by(sector, year, p, tech, tech_long) %>% 
+    group_by(year, p, tech, tech_long) %>% 
     summarize(q_total = sum(q_total), .groups = "drop")
   
   macc_prepped <- df_summarized %>%
@@ -428,7 +559,11 @@ macc_prepped %>%
 }
 
 macc_smooth(df, sectorSelect = "WASTE")
-macc_smooth(df, sourceSelect = "COL")
+macc_smooth(df, sourceSelect = "CROP")
+
+# Error in UseMethod("filter") : 
+#  no applicable method for 'filter' applied to an object of class "function"
+
 ```
 
 ```{r, eval=FALSE}
@@ -500,7 +635,7 @@ plot_macc_alt(macc_prep_sector_df_alt, LAN)
 #4 - # TO DO 4: create table showing total mitigation at or below zero and total mitigation (overall) ie a two line table for each source group (eg ODS Subs, Electronics, wastewater, oil and gas)
 
 ```{r sector_tables}
-  MACC_mitigation_price_table_new <- df %>%
+  MACC_mitigation_price_table_new <- macc_2019 %>%
   #dplyr::filter(sector == "WASTE") %>%
     #mutate(price_group = case_when(p <= 0 ~ "at or below zero",
     #                               p >0 ~ "above zero")) %>%
@@ -522,6 +657,8 @@ plot_macc_alt(macc_prep_sector_df_alt, LAN)
 
 write.csv(MACC_mitigation_price_table_new , "output/MACC_mitigation_price_table_new.csv")
 
+write.csv(MACC_mitigation_price_table_new , "output/MACC_mitigation_price_table_new_2019.csv")
+
 ```
 
 
@@ -529,15 +666,15 @@ write.csv(MACC_mitigation_price_table_new , "output/MACC_mitigation_price_table_
 
 ```{r source_tables}
 
-sector_total_mit <- df %>%
+sector_total_mit <- MACC_df %>%
   group_by(sector, year) %>%
   summarise(total_mit = sum(q_total))
 
-source_total_mit <- df %>%
+source_total_mit <- MACC_df %>%
   group_by(sector, source, year) %>%
   summarise(total_mit = sum(q_total))
 
-  MACC_mitigation_price_table_sectors_new <- df %>%
+  MACC_mitigation_price_table_sectors_new <- macc_2019 %>% #MACC_df
   #dplyr::filter(sector == "WASTE") %>%
     #mutate(price_group = case_when(p <= 0 ~ "at or below zero",
     #                               p >0 ~ "above zero")) %>%
@@ -558,5 +695,7 @@ source_total_mit <- df %>%
   #dplyr::filter(p == 0 | p == max(p))
 
 write.csv(MACC_mitigation_price_table_sectors_new , "output/MACC_mitigation_price_table_sectors_new.csv")
+
+write.csv(MACC_mitigation_price_table_sectors_new , "output/MACC_mitigation_price_table_sectors_new_2019.csv")
 
 ```

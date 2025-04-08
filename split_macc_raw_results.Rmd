@@ -1,0 +1,169 @@
+---
+title: "Split MACC raw results file"
+#author: "Bethel Cole-Smith"
+date: "2025-01-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+
+```
+
+
+
+```{r cars}
+
+#current data
+
+MACC_01302025 <- read.csv("data/MACC_01302025.csv")
+data_current <- MACC_01302025  
+
+unique(data_current$sector)
+
+obs_by_source <- data_current %>%
+  group_by(sector, source) %>%
+  summarize(count = n())
+
+write.csv(obs_by_source, "data/obs_by_source.csv", row.names = FALSE)
+
+#AG
+macc_raw_results_ag <- data_current %>%
+  dplyr::filter(sector == "AGRICULTURE")
+
+unique(macc_raw_results_ag$sector)
+
+
+filename <- paste0("data/macc_raw_results_ag_",Sys.Date(),".csv")
+write.csv(macc_raw_results_ag, file = filename, row.names = FALSE)
+
+
+# energy_and_industrial
+macc_raw_results_energy_ind <- data_current %>%
+  dplyr::filter(sector == "ENERGY" | sector == "INDUSTRIAL")
+
+unique(macc_raw_results_energy_ind$sector)
+
+filename <- paste0("data/macc_raw_results_energy_ind_",Sys.Date(),".csv")
+write.csv(macc_raw_results_energy_ind, file = filename, row.names = FALSE)
+
+
+
+```
+
+## WASTE
+
+```{r waste, echo=FALSE}
+
+
+#Wastewater
+macc_raw_results_WWR <- data_current %>%
+  dplyr::filter(source == "WWR")
+
+unique(macc_raw_results_WWR$source)
+
+filename_wwr <- paste0("data/macc_raw_results_WWR_",Sys.Date(),".csv")
+write.csv(macc_raw_results_WWR, file = filename_wwr, row.names = FALSE)
+
+
+#Landfills
+
+macc_raw_results_LAN20_LAN25 <- data_current %>%
+  filter(year == 2020 | year == 2025)
+
+filename_LAN20_LAN25 <- paste0("data/macc_raw_results_LAN20_LAN25_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN20_LAN25, file = filename_LAN20_LAN25, row.names = FALSE)
+
+
+macc_raw_results_LAN30_LAN35 <- data_current %>%
+  filter(year >= 2030 & year <= 2035)
+
+unique(macc_raw_results_LAN30_LAN35$year)
+
+filename_LAN30_LAN35 <- paste0("data/macc_raw_results_LAN30_LAN35_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN30_LAN35, file = filename_LAN30_LAN35, row.names = FALSE)
+
+
+
+macc_raw_results_LAN40_LAN45 <- data_current %>%
+  filter(year >= 2040 & year <= 2045)
+
+unique(macc_raw_results_LAN40_LAN45$year)
+
+filename_LAN40_LAN45 <- paste0("data/macc_raw_results_LAN40_LAN45_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN40_LAN45, file = filename_LAN40_LAN45, row.names = FALSE)
+
+
+macc_raw_results_LAN50_LAN55 <- data_current %>%
+  filter(year >= 2050 & year <= 2055)
+
+unique(macc_raw_results_LAN50_LAN55$year)
+
+filename_LAN50_LAN55 <- paste0("data/macc_raw_results_LAN50_LAN55_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN50_LAN55, file = filename_LAN50_LAN55, row.names = FALSE)
+
+
+
+macc_raw_results_LAN60_LAN65 <- data_current %>%
+  filter(year >= 2060 & year <= 2065)
+
+unique(macc_raw_results_LAN60_LAN65$year)
+
+filename_LAN60_LAN65 <- paste0("data/macc_raw_results_LAN60_LAN65_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN60_LAN65, file = filename_LAN60_LAN65, row.names = FALSE)
+
+
+macc_raw_results_LAN70_LAN75 <- data_current %>%
+  filter(year >= 2070 & year <= 2075)
+
+unique(macc_raw_results_LAN70_LAN75$year)
+
+filename_LAN70_LAN75 <- paste0("data/macc_raw_results_LAN70_LAN75_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN70_LAN75, file = filename_LAN70_LAN75, row.names = FALSE)
+
+
+macc_raw_results_LAN80_LAN85 <- data_current %>%
+  filter(year >= 2080 & year <= 2085)
+
+unique(macc_raw_results_LAN80_LAN85$year)
+
+filename_LAN80_LAN85 <- paste0("data/macc_raw_results_LAN80_LAN85_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN80_LAN85, file = filename_LAN80_LAN85, row.names = FALSE)
+
+
+macc_raw_results_LAN90_LAN95 <- data_current %>%
+  filter(year >= 2090 & year <= 2095)
+
+unique(macc_raw_results_LAN90_LAN95$year)
+
+filename_LAN90_LAN95 <- paste0("data/macc_raw_results_LAN90_LAN95_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN90_LAN95, file = filename_LAN90_LAN95, row.names = FALSE)
+
+
+macc_raw_results_LAN100 <- data_current %>%
+  filter(year == 2100)
+
+unique(macc_raw_results_LAN100$year)
+
+filename_LAN100 <- paste0("data/macc_raw_results_LAN100_",Sys.Date(),".csv")
+write.csv(macc_raw_results_LAN100, file = filename_LAN100, row.names = FALSE)
+
+
+
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+
+# break data into sectors
+# create start and end years
+# for landfill sector, use lapply and start and end years to break data into chunks by year
+
+```
+

@@ -1,0 +1,275 @@
+---
+pagetitle: "2024 Global Non-CO2 Report: MACC Curves "
+output:
+  html_document:
+    number_sections: false
+    highlight: tango
+    fontsize: 12
+    fig_caption: false
+    toc: yes
+    toc_float:
+      toc_collapsed: true
+    toc_depth: 3
+    theme: spacelab
+params:
+  mode: "interactive"
+---
+
+# Global Projections and Mitigation: MACC Curves
+
+```{r,echo = FALSE, results = "show", warning = FALSE, message = FALSE, error = FALSE}
+knitr::opts_chunk$set(echo = FALSE, results = "show", warning = FALSE, message = FALSE, error = FALSE, fig.align = "center", fig.width = 10, fig.height = 7)
+```
+
+
+```{r cars}
+library(targets)
+library(tarchetypes)
+source("packages.R")
+
+tar_source()
+```
+
+
+```{r pressure}
+tar_load(clean_macc_2024)#,
+         #combined_sources)
+```
+
+
+```{r, eval=FALSE}
+emis_df <- emis_df %>%
+  mutate(source = case_when(source %in% c("Aluminum Production","Magnesium Production") ~ "Metals",
+                            source %in% c("Semiconductor Manufacturing",
+                                          "Photovoltaic Cell Manufacturing",
+                                          "Flat Panel Display Manufacturing") ~ "Electronics",
+                            source %in% c("Aerosols",
+                                          "Fire Protection",
+                                          "Foams Mfg, Use, and Disposal",
+                                          "Solvent Use",
+                                          "Refrigeration and Air Conditioning") ~ "Substitutes for Ozone-Depleting Substances",
+                            TRUE ~ source))
+
+
+# DO renaming
+# "NF3 Etching" - Combustion-Wet POU Abatement: FPD NF3 Etch
+# "SF6 Cleaning" - Combustion-Wet POU Abatement: FPD SF6 Clean 
+# "NF3 Cleaning" - Combustion-Wet POU Abatement: FPD NF3 CLean 
+# "SF6 Etching" - Combustion-Wet POU Abatement: FPD SF6 Etch
+# 
+# CoW 
+
+
+data3 <- arrange(data2, date)
+
+FPD <- MACC_01302025 %>% dplyr::filter(source == "FPD")
+
+PV <- MACC_01302025 %>% 
+  dplyr::filter(source == "PV") %>%
+  arrange(p)
+
+SEMI <- MACC_01302025 %>% 
+  dplyr::filter(source == "SEMI") %>%
+  arrange(p)
+
+# https://stackoverflow.com/questions/9564489/read-all-files-in-a-folder-and-apply-a-function-to-each-data-frame
+
+# https://federicovegetti.github.io/teaching/heidelberg_2018/lab/sst_lab_day2.html
+
+```
+
+
+
+
+```{r}
+# 
+# macc_bySource_gas(combined_sources,yearSelect=2030, priceMin = -400,priceMax=100,versionSelect=2024,gasSelect = methane,legendOFF=TRUE)
+# 
+
+```
+
+
+# Global Mitigation Opportunities by Sector {.tabset}
+
+## Agriculture {.tabset}
+
+
+### Smooth
+
+```{r}
+
+
+macc_smooth(clean_macc_2024, sectorSelect = "AGRICULTURE")
+macc_smooth(clean_macc_2024, sectorSelect = "AGRICULTURE", yearSelect = 2050)
+
+
+```
+
+### By Tech
+```{r}
+
+
+macc_byTech(clean_macc_2024, sectorSelect = "AGRICULTURE")
+macc_byTech(clean_macc_2024, sectorSelect = "AGRICULTURE", yearSelect = 2050)
+
+
+```
+
+
+## Energy {.tabset}
+
+
+### Smooth
+
+```{r}
+macc_smooth(clean_macc_2024, sectorSelect = "ENERGY")
+macc_smooth(clean_macc_2024, sectorSelect = "ENERGY", yearSelect = 2050)
+
+```
+
+### By Tech
+
+
+```{r}
+
+macc_byTech(clean_macc_2024, sectorSelect = "ENERGY")
+macc_byTech(clean_macc_2024, sectorSelect = "ENERGY", yearSelect = 2050)
+
+```
+
+
+## Industrial Processes {.tabset}
+
+### Smooth
+
+```{r}
+macc_smooth(clean_macc_2024, sectorSelect = "INDUSTRIAL")
+macc_smooth(clean_macc_2024, sectorSelect = "INDUSTRIAL", yearSelect = 2050)
+
+```
+
+### By Tech
+
+
+```{r}
+macc_byTech(clean_macc_2024, sectorSelect = "INDUSTRIAL")
+macc_byTech(clean_macc_2024, sectorSelect = "INDUSTRIAL", yearSelect = 2050)
+
+
+```
+
+
+## Waste {.tabset}
+
+
+
+### Smooth
+
+```{r}
+macc_smooth(clean_macc_2024, sectorSelect = "WASTE")
+macc_smooth(clean_macc_2024, sectorSelect = "WASTE", yearSelect = 2050)
+
+```
+
+
+### By Tech
+
+
+```{r}
+macc_byTech(clean_macc_2024, sectorSelect = "WASTE")
+macc_byTech(clean_macc_2024, sectorSelect = "WASTE", yearSelect = 2050)
+
+```
+
+
+# Global Mitigation Opportunities by Source {.tabset}
+
+## Gas {.tabset}
+
+
+
+### Smooth
+
+```{r}
+macc_smooth(clean_macc_2024, sourceSelect = "GAS")
+macc_smooth(clean_macc_2024, sourceSelect = "GAS", yearSelect = 2050)
+
+```
+
+
+### By Tech
+
+
+```{r}
+macc_byTech(clean_macc_2024, sectorSelect = "GAS")
+macc_byTech(clean_macc_2024, sectorSelect = "GAS", yearSelect = 2050)
+
+```
+
+
+
+## Coal {.tabset}
+
+
+
+### Smooth
+
+```{r}
+macc_smooth(clean_macc_2024, sourceSelect = "COL")
+macc_smooth(clean_macc_2024, sourceSelect = "COL", yearSelect = 2050)
+
+```
+
+
+### By Tech
+
+
+```{r}
+macc_byTech(clean_macc_2024, sectorSelect = "COL")
+macc_byTech(clean_macc_2024, sectorSelect = "COL", yearSelect = 2050)
+
+```
+
+
+## Landfill {.tabset}
+
+
+
+### Smooth
+
+```{r}
+macc_smooth(clean_macc_2024, sourceSelect = "LAN")
+macc_smooth(clean_macc_2024, sourceSelect = "LAN", yearSelect = 2050)
+
+```
+
+
+### By Tech
+
+
+```{r}
+macc_byTech(clean_macc_2024, sectorSelect = "LAN")
+macc_byTech(clean_macc_2024, sectorSelect = "LAN", yearSelect = 2050)
+
+```
+
+## Wastewater {.tabset}
+
+
+### Smooth
+
+```{r}
+macc_smooth(clean_macc_2024, sourceSelect = "WWR")
+macc_smooth(clean_macc_2024, sourceSelect = "WWR", yearSelect = 2050)
+
+```
+
+
+### By Tech
+
+
+```{r}
+macc_byTech(clean_macc_2024, sectorSelect = "WWR")
+macc_byTech(clean_macc_2024, sectorSelect = "WWR", yearSelect = 2050)
+
+```

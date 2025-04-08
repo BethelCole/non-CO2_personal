@@ -1,6 +1,6 @@
 ---
 title: "macc_qa_qc"
-author: "Bethel Cole-Smith"
+#author: "Bethel Cole-Smith"
 output:
   html_document:
     toc: yes
@@ -25,18 +25,20 @@ library(ggmacc) # devtools::install_github("aj-sykes92/ggmacc")
 
 ```{r data}
 # Read in country code mapping
-country_map = read_csv("data/country_map.csv") %>%
+country_map = read_csv("../data/country_map.csv") %>%
   rename(country_code = r)
 
 # Read in global MACC data
-macc_2024 = read_csv("data/MACC_01142025.csv") %>%
+macc_2024 = read_csv("../data/MACC_01242025.csv") %>%
   mutate(version = 2024) %>%
-  left_join(country_map, by="country")
+  left_join(country_map, by="country") %>%
+  dplyr::select(-country_code.y) %>%
+  rename(country_code = country_code.x)
 
 sectors <- unique(macc_2024$sector)
 sources = unique(macc_2024$source)
 
-macc_2019 = read_xlsx("data/MACC_Gas_Tech_Intl with proj and pivot_2019.xlsx", sheet = "Mitigation - Raw Data") %>%
+macc_2019 = read_xlsx("../data/MACC_Gas_Tech_Intl with proj and pivot_2019.xlsx", sheet = "Mitigation - Raw Data") %>%
   mutate(version = 2019) %>%
   rename(country_code = country) %>%
   select(-q_dsoc) %>% 
@@ -90,7 +92,7 @@ fig = macc_prepped %>%
   facet_grid(year~.) +
   scale_fill_discrete(guide = guide_legend()) +
   theme(legend.position="bottom") +
-  labs(y = "Price ($/tCO2e",
+  labs(y = "Price ($/tCO2e)",
        x = "Mitigation (Mt CO2e)",
        title = title,
        fill = "Technology")
@@ -98,17 +100,18 @@ fig = macc_prepped %>%
 if(legendOFF) {fig = fig + theme(legend.position='none')}
 
 if(!is.null(sectorSelect)) {
-  ggsave(paste0("output/macc_byTech/sectors/",sectorSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 10, height = 10,
+  ggsave(paste0("../output/macc_byTech/sectors/",sectorSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 10, height = 10,
          create.dir = TRUE)
   print(paste("Figure created for",sectorSelect))}
 if(!is.null(sourceSelect)) {
-  ggsave(paste0("output/macc_byTech/sources/",sourceSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 10, height = 10,
+  ggsave(paste0("../output/macc_byTech/sources/",sourceSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 10, height = 10,
          create.dir = TRUE)
   print(paste("Figure created for",sourceSelect))}
 
 print(fig)
 return(fig)
 }
+
 ```
 
 ## Sectors
@@ -127,6 +130,19 @@ for (sector in sectors) {
     legendOFF = TRUE
   )
 }
+
+# 2019 data
+for (sector in sectors) {
+  macc_byTech(
+    macc_2019,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2019,
+    legendOFF = TRUE
+  )
+}
 ```
 
 ### 2050
@@ -140,6 +156,19 @@ for (sector in sectors) {
     yearSelect = 2050,
     priceMax = 100,
     versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+
+# 2019 data
+for (sector in sectors) {
+  macc_byTech(
+    macc_2019,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2019,
     legendOFF = TRUE
   )
 }
@@ -161,6 +190,21 @@ for (source in sources) {
     legendOFF = TRUE
   )
 }
+
+# 2019 data
+for (source in sources) {
+  macc_byTech(
+    macc_2019,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2019,
+    legendOFF = TRUE
+  )
+}
+
+
 ```
 
 ### 2050
@@ -174,6 +218,19 @@ for (source in sources) {
     yearSelect = 2050,
     priceMax = 100,
     versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+
+# 2019 data
+for (source in sources) {
+  macc_byTech(
+    macc_2019,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2019,
     legendOFF = TRUE
   )
 }
@@ -230,17 +287,18 @@ fig = macc_prepped %>%
        title = title)
 
 if(!is.null(sectorSelect)) {
-  ggsave(paste0("output/macc_smooth/sectors/",sectorSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 5, height = 5,
+  ggsave(paste0("../output/macc_smooth/sectors/",sectorSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 5, height = 5,
          create.dir = TRUE)
   print(paste("Figure created for",sectorSelect))}
 if(!is.null(sourceSelect)) {
-  ggsave(paste0("output/macc_smooth/sources/",sourceSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 5, height = 5,
+  ggsave(paste0("../output/macc_smooth/sources/",sourceSelect,"_",yearSelect,"_v",versionSelect,".png"), width = 5, height = 5,
          create.dir = TRUE)
   print(paste("Figure created for",sourceSelect))}
 
 print(fig)
 return(fig)
 }
+
 ```
 
 ## Sectors
@@ -259,6 +317,20 @@ for (sector in sectors) {
     legendOFF = TRUE
   )
 }
+
+#2019 data
+for (sector in sectors) {
+  macc_smooth(
+    macc_2019,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2019,
+    legendOFF = TRUE
+  )
+}
+
 ```
 
 ### 2050
@@ -272,6 +344,20 @@ for (sector in sectors) {
     yearSelect = 2050,
     priceMax = 100,
     versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+
+
+#2019 data
+for (sector in sectors) {
+  macc_smooth(
+    macc_2019,
+    sectorSelect = sector,
+    sourceSelect = NULL,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2019,
     legendOFF = TRUE
   )
 }
@@ -293,6 +379,19 @@ for (source in sources) {
     legendOFF = TRUE
   )
 }
+
+#2019 data
+for (source in sources) {
+  macc_smooth(
+    macc_2019,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2030,
+    priceMax = 100,
+    versionSelect = 2019,
+    legendOFF = TRUE
+  )
+}
 ```
 
 ### 2050
@@ -306,6 +405,19 @@ for (source in sources) {
     yearSelect = 2050,
     priceMax = 100,
     versionSelect = 2024,
+    legendOFF = TRUE
+  )
+}
+
+#2019 data
+for (source in sources) {
+  macc_smooth(
+    macc_2019,
+    sectorSelect = NULL,
+    sourceSelect = source,
+    yearSelect = 2050,
+    priceMax = 100,
+    versionSelect = 2019,
     legendOFF = TRUE
   )
 }

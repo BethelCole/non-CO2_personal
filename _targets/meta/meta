@@ -1,0 +1,16 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
+MACC_01242025|stem|cf9c129ec244a3c3|557b4bc4f376691b|2c530c1562a7fbd1|-1542801647|data/MACC_01242025.csv|t20115.6399007515s|s967362834b|967362834|file|local|vector|||0.01||
+MACC_01282025|stem|dfe91c4a2bf1a064|e5f6eda58bbfbc2b|2c530c1562a7fbd1|-904535165|data/MACC_01282025.csv|t20116.7696634325s|s968079896b|968079896|file|local|vector|||0||
+MACC_01302025|stem|81187cb01862b9bc|7bd2981d6f2e651e|2c530c1562a7fbd1|-878612353|data/MACC_01302025.csv|t20118.7546044429s|s1067237047b|1067237047|file|local|vector|||0||
+raw_macc_2024|stem|ca75bc2a7d6ce9f2|6736e0904887eb27|325f5e4f49218775|2099389804||t20118.8533041217s|s224543853b|224543853|rds|local|vector|||17.04||
+clean_macc_2024|stem|e8780f341e831675|747dace9334f9cf8|60af8a29f5da01f5|-1154316616||t20118.8539282044s|s225590233b|225590233|rds|local|vector|||5.02||
+MACC_STATE_03262025|stem|9c85c75f69a8a2c3|eeb0bb9450f6c459|2c530c1562a7fbd1|-1869130278|data/MACC_STATE_03262025.csv|t20178.7054837601s|s487230245b|487230245|file|local|vector|||0||
+raw_macc_state_2025|stem|919880b0141367e6|e301f855e5f50bad|628578b80b6556c0|183465252||t20178.7470039398s|s104361537b|104361537|rds|local|vector|||7.54||
+current_data|stem|919880b0141367e6|e301f855e5f50bad|628578b80b6556c0|146851224||t20178.7488318293s|s104361537b|104361537|rds|local|vector|||6.43||
+macc_byTech|function|53b5bbd1149277f8|||||||||||||||
+pdf_figs|stem|fe375156a64f0abe|6f7ac3c7fbec8b1a|0eb3027d61937469|-473052288|output/macc_curves_state_2025-04-08_updated.html*docs/macc_curves_state.Rmd|t20186.5387810599s|s2936892b|2936892|file|local|vector|||108.29||
+macc_byTech_updated|function|1fb828128ff420f5
+macc_bySource_gas|function|217b7b9e05cfc05b
+prep_macc_file|function|666b017e05452937
+macc_smooth|function|46b523fb0ae29faf
+tech_function|stem|39b814782a472e25|be839a6d2590c7f2|2c530c1562a7fbd1|1918323467|R/macc_byTech_updated.R|t20186.5607385422s|s4920b|4920|file|local|vector|||0||
