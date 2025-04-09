@@ -4,7 +4,8 @@ macc_byTech_updated = function(macc_df,
                        yearSelect=2030, 
                        priceMax=100,
                        versionSelect=2024,
-                       legendOFF=TRUE) {
+                       legendOFF=TRUE,
+                       splitFig=FALSE) {
   
   if(length(sectorSelect)>1) {rlang::abort(message = "This function can only handle one sector at a time")}
   if(length(sourceSelect)>1) {rlang::abort(message = "This function can only handle one source at a time")}
@@ -17,13 +18,13 @@ macc_byTech_updated = function(macc_df,
   if(!is.null(sectorSelect)) {
     df_filtered = df_filtered %>%
       filter(sector %in% sectorSelect)
-    title = paste(sectorSelect, yearSelect) 
+    title = paste(sectorSelect, yearSelect, "Mitigation up to $100") 
   }
   
   if(!is.null(sourceSelect)) {
     df_filtered = df_filtered %>%
       filter(source %in% sourceSelect)
-    title = paste(sourceSelect, yearSelect)
+    title = paste(sourceSelect, yearSelect, "Mitigation up to $100")
   }
   
   df_summarized = df_filtered %>%
@@ -65,8 +66,10 @@ macc_byTech_updated = function(macc_df,
   
   # added from macc_qa_qc_2024_data_chart_fixes.Rmd
   
-  if(is.null(sourceSelect) & sectorSelect == "AGRICULTURE") {
-    {rlang::inform(message = "Creating split graphs for the Agriculture sector")}
+  #if(is.null(sourceSelect) & sectorSelect == "AGRICULTURE") {
+  if(splitFig==TRUE) {
+    
+    #{rlang::inform(message = "Creating split graphs for the Agriculture sector")}
     # macc_prepped_facet = macc_prepped %>%
     #   mutate(above_zero = case_when(p > 0 ~1,
     #                            TRUE ~ 0))
@@ -86,12 +89,12 @@ macc_byTech_updated = function(macc_df,
     # if(legendOFF) {fig = fig + theme(legend.position='none')}
     macc_prepped_upper = macc_prepped %>%
       mutate(ymin = 0)
-    title = "Mitigation Above $0"
+    title = "Mitigation Above $0 (max $100)"
 
     fig_upper = macc_prepped_upper %>%
       ggplot() +
       geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
-      facet_grid(year~.) +
+      #facet_grid(year~.) +
       scale_fill_discrete(guide = guide_legend()) +
       theme(legend.position="none") +
       labs(y = "Price ($/tCO2e)",
@@ -104,12 +107,12 @@ macc_byTech_updated = function(macc_df,
     dplyr::filter(ymin >= -1000)
   #mutate(ymax = 0)
   #title =  c(sectorSelect, ": Mitigation At or Below $0")
-  title = "No Cost Mitigation"
+  title = "No Cost Mitigation ($-1000 +)"
 
   fig_lower = macc_prepped_lower %>%
     ggplot() +
     geom_rect(aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = tech_long)) +
-    facet_grid(year~.) +
+    #facet_grid(year~.) +
     #xlim(0, 500) +
     #ylim(min(macc_prepped$ymin), 0) +
     scale_fill_discrete(guide = guide_legend()) +
@@ -120,6 +123,7 @@ macc_byTech_updated = function(macc_df,
          fill = "Technology")
 
   # https://stackoverflow.com/questions/59017349/apply-a-function-for-creating-cowplots-on-a-list-of-ggplots-with-4-plots-each-ti
+  # https://stackoverflow.com/questions/1249548/side-by-side-plots-with-ggplot2/31223588#31223588
   fig = plot_grid(fig_lower, fig_upper, labels = "AUTO") # from cowplot
   #grid.arrange(fig_upper, fig_lower, ncol=2) # from grid.arrange
   

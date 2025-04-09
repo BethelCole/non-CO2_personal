@@ -27,7 +27,7 @@ list(
   tar_target(current_data, read_csv(MACC_STATE_03262025)),
   
   #track functions
-  tar_target(tech_function, "R/macc_byTech_updated.R", format = "file"),
+  #tar_target(tech_function, "R/macc_byTech_updated.R", format = "file"),
   
   # combine the source datasets to create mitigation graphs for gases by source
   # tar_target(lan_file, "data/LAN_01172025.csv", format = "file"),
@@ -63,6 +63,7 @@ list(
   #            output_file = paste0("macc_curves_",Sys.Date(),"updated.html"),
   #            params = list(mode = "targets")),
   
+  # tar_invalidate(pdf_figs)
   tar_render(pdf_figs,
              "docs/macc_curves_state.Rmd",
              output_dir = 'output/',
