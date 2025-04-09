@@ -25,33 +25,7 @@ list(
   # state data
   tar_target(MACC_STATE_03262025, "data/MACC_STATE_03262025.csv", format = "file"),
   tar_target(current_data, read_csv(MACC_STATE_03262025)),
-  
-  #track functions
-  #tar_target(tech_function, "R/macc_byTech_updated.R", format = "file"),
-  
-  # combine the source datasets to create mitigation graphs for gases by source
-  # tar_target(lan_file, "data/LAN_01172025.csv", format = "file"),
-  # tar_target(col_file, "data/COL_01172025.csv", format = "file"),
-  # tar_target(gas_file, "data/GAS_01172025.csv", format = "file"),
-  # tar_target(live_file, "data/LIVE_01172025.csv", format = "file"),
-  # tar_target(rice_file, "data/RICE_01172025.csv", format = "file"),
-  # tar_target(wwr_file, "data/WWR_01172025.csv", format = "file"),
-  # 
-  # tar_target(lan_data, read_csv(lan_file)), 
-  # tar_target(col_data, read_csv(col_file)), 
-  # tar_target(gas_data, read_csv(gas_file)),
-  # tar_target(live_data, read_csv(live_file)),
-  # tar_target(rice_data, read_csv(rice_file)),
-  # tar_target(wwr_data, read_csv(wwr_file)),
-  # 
-  # combine datasets
-  # combined_sources <- lan_data %>%
-  #   rbind(col_data) %>%
-  #   rbind(gas_data) %>%
-  #   rbind(live_data) %>%
-  #   rbind(rice_data) %>%
-  #   rbind(wwr_data), 
-  
+
   # Crosswalks and Maps ----
   
   

@@ -15,7 +15,7 @@ params:
   mode: "interactive"
 ---
 
-# State-level Projections and Mitigation: MACC Curves
+
 
 ```{r,echo = FALSE, results = "show", warning = FALSE, message = FALSE, error = FALSE}
 knitr::opts_chunk$set(echo = FALSE, results = "show", warning = FALSE, message = FALSE, error = FALSE, fig.align = "center", fig.width = 10, fig.height = 7)
@@ -93,6 +93,29 @@ current_data <- current_data %>%
 # 
 # macc_bySource_gas(combined_sources,yearSelect=2030, priceMin = -400,priceMax=100,versionSelect=2024,gasSelect = methane,legendOFF=TRUE)
 # 
+
+```
+
+
+# State-level Mitigation Opportunities: Sector Summary
+
+
+```{r}
+
+# by sector
+summary_stats_sector <- current_data %>%
+  mutate(max_100_q = case_when(p <=100 ~ q_total,
+                               TRUE ~ 0)) %>%
+  group_by(sector, year) %>%
+  summarise(mitigation = sum(q_total),
+            "mitigation up to $100" = sum(max_100_q)) %>%
+  dplyr::filter(year %in% c(2030, 2050))
+
+# https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html
+mit_by_sector_summary <- kbl(summary_stats_sector, digits = 1) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+mit_by_sector_summary
 
 ```
 
@@ -189,6 +212,25 @@ macc_byTech_updated(current_data, sectorSelect = "WASTE", yearSelect = 2050)
 
 ```
 
+# State-level Mitigation Opportunities: Source Summary
+```{r}
+# by source
+summary_stats_source <- current_data %>%
+  mutate(max_100_q = case_when(p <=100 ~ q_total,
+                               TRUE ~ 0)) %>%
+  group_by(source, year) %>%
+  summarise("total mitigation" = sum(q_total),
+            "mitigation up to $100" = sum(max_100_q)) %>%
+  dplyr::filter(year %in% c(2030, 2050))
+
+# https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html
+mit_by_source_summary <- kbl(summary_stats_source, digits = 1) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+mit_by_source_summary
+
+```
+
 
 # State-level Mitigation Opportunities by Source {.tabset}
 
@@ -209,8 +251,8 @@ macc_smooth_updated(current_data, sourceSelect = "LIVE", yearSelect = 2050, spli
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "LIVE", splitFig = TRUE)
-macc_byTech_updated(current_data, sectorSelect = "LIVE", yearSelect = 2050, splitFig = TRUE)
+macc_byTech_updated(current_data, sourceSelect = "LIVE", splitFig = TRUE)
+macc_byTech_updated(current_data, sourceSelect = "LIVE", yearSelect = 2050, splitFig = TRUE)
 
 ```
 
@@ -231,8 +273,8 @@ macc_smooth_updated(current_data, sourceSelect = "CROP", yearSelect = 2050, spli
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "CROP", splitFig = TRUE)
-macc_byTech_updated(current_data, sectorSelect = "CROP", yearSelect = 2050, splitFig = TRUE)
+macc_byTech_updated(current_data, sourceSelect = "CROP", splitFig = TRUE)
+macc_byTech_updated(current_data, sourceSelect = "CROP", yearSelect = 2050, splitFig = TRUE)
 
 ```
 
@@ -251,8 +293,8 @@ macc_smooth_updated(current_data, sourceSelect = "RICE", yearSelect = 2050, spli
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "RICE", splitFig = TRUE)
-macc_byTech_updated(current_data, sectorSelect = "RICE", yearSelect = 2050, splitFig = TRUE)
+macc_byTech_updated(current_data, sourceSelect = "RICE", splitFig = TRUE)
+macc_byTech_updated(current_data, sourceSelect = "RICE", yearSelect = 2050, splitFig = TRUE)
 
 ```
 
@@ -274,8 +316,8 @@ macc_smooth_updated(current_data, sourceSelect = "GAS", yearSelect = 2050)
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "GAS")
-macc_byTech_updated(current_data, sectorSelect = "GAS", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "GAS")
+macc_byTech_updated(current_data, sourceSelect = "GAS", yearSelect = 2050)
 
 ```
 
@@ -296,8 +338,8 @@ macc_smooth_updated(current_data, sourceSelect = "COL", yearSelect = 2050)
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "COL")
-macc_byTech_updated(current_data, sectorSelect = "COL", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "COL")
+macc_byTech_updated(current_data, sourceSelect = "COL", yearSelect = 2050)
 
 ```
 
@@ -319,8 +361,8 @@ macc_smooth_updated(current_data, sourceSelect = "EPS", yearSelect = 2050)
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "EPS")
-macc_byTech_updated(current_data, sectorSelect = "EPS", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "EPS")
+macc_byTech_updated(current_data, sourceSelect = "EPS", yearSelect = 2050)
 
 ```
 
@@ -341,8 +383,8 @@ macc_smooth_updated(current_data, sourceSelect = "NAA", yearSelect = 2050)
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "NAA")
-macc_byTech_updated(current_data, sectorSelect = "NAA", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "NAA")
+macc_byTech_updated(current_data, sourceSelect = "NAA", yearSelect = 2050)
 
 ```
 
@@ -361,8 +403,8 @@ macc_smooth_updated(current_data, sourceSelect = "Metals", yearSelect = 2050)
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "Metals")
-macc_byTech_updated(current_data, sectorSelect = "Metals", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "Metals")
+macc_byTech_updated(current_data, sourceSelect = "Metals", yearSelect = 2050)
 
 ```
 
@@ -382,8 +424,8 @@ macc_smooth_updated(current_data, sourceSelect = "ODS-Subs", yearSelect = 2050)
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "ODS-Subs")
-macc_byTech_updated(current_data, sectorSelect = "ODS-Subs", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "ODS-Subs")
+macc_byTech_updated(current_data, sourceSelect = "ODS-Subs", yearSelect = 2050)
 
 ```
 
@@ -402,8 +444,8 @@ macc_smooth_updated(current_data, sourceSelect = "Electronics", yearSelect = 205
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "Electronics")
-macc_byTech_updated(current_data, sectorSelect = "Electronics", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "Electronics")
+macc_byTech_updated(current_data, sourceSelect = "Electronics", yearSelect = 2050)
 
 ```
 
@@ -425,8 +467,8 @@ macc_smooth_updated(current_data, sourceSelect = "LAN", yearSelect = 2050)
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "LAN")
-macc_byTech_updated(current_data, sectorSelect = "LAN", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "LAN")
+macc_byTech_updated(current_data, sourceSelect = "LAN", yearSelect = 2050)
 
 ```
 
@@ -446,7 +488,7 @@ macc_smooth_updated(current_data, sourceSelect = "WWR", yearSelect = 2050)
 
 
 ```{r}
-macc_byTech_updated(current_data, sectorSelect = "WWR")
-macc_byTech_updated(current_data, sectorSelect = "WWR", yearSelect = 2050)
+macc_byTech_updated(current_data, sourceSelect = "WWR")
+macc_byTech_updated(current_data, sourceSelect = "WWR", yearSelect = 2050)
 
 ```

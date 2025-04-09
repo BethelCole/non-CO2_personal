@@ -5,8 +5,9 @@ macc_bySource_gas = function(combined_df,
                            priceMin = -400,
                            priceMax=100,
                            versionSelect=2024,
-                           gasSelect = ch4,
-                           legendOFF=TRUE) {
+                           gasSelect = NULL,
+                           legendOFF=TRUE,
+                           splitFig=FALSE) {
   
   #  if(length(sectorSelect)>1) {rlang::abort(message = "This function can only handle one sector at a time")}
   #  if(length(sourceSelect)>1) {rlang::abort(message = "This function can only handle one source at a time")}
